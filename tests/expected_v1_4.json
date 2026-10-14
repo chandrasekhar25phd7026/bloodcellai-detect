@@ -1,0 +1,117 @@
+{
+  "class_aml_like": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "class_flat": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "class_photos_in_gt_named_dirs": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "class_wrapped": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "coco_json": {
+    "confidence": 0.9,
+    "format": "coco_json",
+    "role": "detection_benchmark"
+  },
+  "comma_point": {
+    "confidence": 0.65,
+    "format": "point_labels",
+    "role": "classification_only"
+  },
+  "comma_polygon": {
+    "confidence": 0.65,
+    "format": "custom_polygon_json",
+    "role": "detection_benchmark"
+  },
+  "custom_polygon_json": {
+    "confidence": 0.6,
+    "format": "custom_polygon_json",
+    "role": "detection_benchmark"
+  },
+  "does_not_exist": {
+    "confidence": 0.0,
+    "format": "abstain",
+    "role": "abstain"
+  },
+  "point_txt": {
+    "confidence": 0.65,
+    "format": "point_labels",
+    "role": "classification_only"
+  },
+  "seg_dir_masks": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "seg_grth_raabin_like": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "seg_name_mask": {
+    "confidence": 0.7,
+    "format": "segmentation_masks",
+    "role": "segmentation"
+  },
+  "seg_raabin_bmp_gt": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "seg_raabin_grth_jpg": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "seg_same_folder_pairs": {
+    "confidence": 0.5,
+    "format": "unlabelled",
+    "role": "unlabelled"
+  },
+  "seg_tif_realmask": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "seg_voc_labelme": {
+    "confidence": 0.6,
+    "format": "custom_polygon_json",
+    "role": "detection_benchmark"
+  },
+  "split_class_folders": {
+    "confidence": 0.8,
+    "format": "classification_folders",
+    "role": "classification_only"
+  },
+  "unlabelled": {
+    "confidence": 0.5,
+    "format": "unlabelled",
+    "role": "unlabelled"
+  },
+  "voc_xml": {
+    "confidence": 0.9,
+    "format": "voc_xml",
+    "role": "detection_benchmark"
+  },
+  "yolo_txt": {
+    "confidence": 0.85,
+    "format": "yolo_txt",
+    "role": "detection_benchmark"
+  },
+  "yolo_with_labels_dir": {
+    "confidence": 0.85,
+    "format": "yolo_txt",
+    "role": "detection_benchmark"
+  }
+}

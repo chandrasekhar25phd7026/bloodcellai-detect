@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blood-cell dataset detector — format, role &amp; harmonization, in your browser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root {
+    --paper: #F1EFF5;
+    --paper-raised: #FFFFFF;
+    --ink: #20232F;
+    --ink-soft: #52556A;
+    --rule: #D8D4E3;
+    --eosin: #B23368;
+    --eosin-soft: #E7CBD8;
+    --violet: #4A4E9E;
+    --violet-soft: #DEDDF2;
+    --ok: #2F7D5B;
+    --ok-bg: #E3F0E9;
+    --warn: #966324;
+    --warn-bg: #F3E9D6;
+    --bad: #A23B3B;
+    --bad-bg: #F3E0DF;
+    --mono-bg: #28293A;
+    --mono-ink: #E4E2EE;
+    --focus: #4A4E9E;
+    --radius: 3px;
+    --dot-eosin: rgba(178, 51, 104, 0.45);
+    --dot-violet: rgba(74, 78, 158, 0.38);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #181A24;
+      --paper-raised: #20222E;
+      --ink: #EBEAF2;
+      --ink-soft: #AFAEC4;
+      --rule: #383A4C;
+      --eosin: #E27AA4;
+      --eosin-soft: #3C2430;
+      --violet: #9A9CE8;
+      --violet-soft: #272A4C;
+      --ok: #7FCBA4;
+      --ok-bg: #1C3328;
+      --warn: #E0B468;
+      --warn-bg: #3A2E16;
+      --bad: #E39292;
+      --bad-bg: #3A2224;
+      --mono-bg: #11121A;
+      --mono-ink: #D8D7E6;
+      --dot-eosin: rgba(226, 122, 164, 0.32);
+      --dot-violet: rgba(154, 156, 232, 0.28);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #181A24;
+    --paper-raised: #20222E;
+    --ink: #EBEAF2;
+    --ink-soft: #AFAEC4;
+    --rule: #383A4C;
+    --eosin: #E27AA4;
+    --eosin-soft: #3C2430;
+    --violet: #9A9CE8;
+    --violet-soft: #272A4C;
+    --ok: #7FCBA4;
+    --ok-bg: #1C3328;
+    --warn: #E0B468;
+    --warn-bg: #3A2E16;
+    --bad: #E39292;
+    --bad-bg: #3A2224;
+    --mono-bg: #11121A;
+    --mono-ink: #D8D7E6;
+    --dot-eosin: rgba(226, 122, 164, 0.32);
+    --dot-violet: rgba(154, 156, 232, 0.28);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 600; margin: 0 0 0.4em; color: var(--ink); }
+  a { color: var(--violet); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--rule);
+    background:
+      radial-gradient(circle at 12% 28%, var(--dot-eosin) 0 14px, transparent 15px),
+      radial-gradient(circle at 78% 18%, var(--dot-violet) 0 22px, transparent 23px),
+      radial-gradient(circle at 60% 72%, var(--dot-eosin) 0 10px, transparent 11px),
+      radial-gradient(circle at 92% 64%, var(--dot-violet) 0 16px, transparent 17px),
+      radial-gradient(circle at 30% 85%, var(--dot-eosin) 0 8px, transparent 9px),
+      radial-gradient(circle at 44% 10%, var(--dot-violet) 0 6px, transparent 7px),
+      var(--paper-raised);
+    background-repeat: no-repeat;
+  }
+  .hero-inner { padding: clamp(32px, 7vw, 68px) 20px clamp(28px, 6vw, 48px); max-width: 860px; margin: 0 auto; }
+  .hero h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -0.01em; max-width: 18ch; }
+  .hero p.lede { color: var(--ink-soft); max-width: 58ch; font-size: 1.05rem; margin: 0.9em 0 0; }
+
+  .panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-top: 22px;
+  }
+
+  .dropzone {
+    border: 1px dashed var(--rule);
+    border-radius: var(--radius);
+    padding: 26px 22px;
+    text-align: center;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .dropzone.drag { border-color: var(--violet); background: var(--violet-soft); }
+  .dropzone p { margin: 0 0 14px; color: var(--ink-soft); }
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  button, .file-btn {
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper-raised);
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  button.secondary, .file-btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--rule);
+  }
+  button:hover, .file-btn:hover { opacity: 0.88; }
+  button:focus-visible, .file-btn:focus-visible, a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px;
+  }
+  input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+  .hint { color: var(--ink-soft); font-size: 0.85rem; margin-top: 12px; }
+
+  .status-line { display: flex; align-items: center; gap: 10px; color: var(--ink-soft); font-size: 0.92rem; margin-top: 14px; }
+  .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--rule); border-top-color: var(--violet); animation: spin 0.8s linear infinite; flex: none; }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results { margin-top: 28px; display: none; }
+  .results.show { display: block; }
+
+  .report { border: 1px solid var(--rule); border-radius: var(--radius); margin-top: 18px; overflow: hidden; }
+  .report-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-left: 5px solid var(--rule); }
+  .report-head.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+  .report-head.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+  .report-head.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+  .report-eyebrow { font-size: 0.78rem; color: var(--ink-soft); margin: 0 0 2px; }
+  .report-title { font-family: "Fraunces", Georgia, serif; font-size: 1.15rem; font-weight: 600; margin: 0; }
+  .report-sub { color: var(--ink-soft); font-size: 0.9rem; margin: 2px 0 0; }
+  .report-body { padding: 14px 20px 18px; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 16px; font-size: 0.93rem; }
+  .kv dt { color: var(--ink-soft); }
+  .kv dd { margin: 0; }
+
+  details.evidence { margin-top: 14px; }
+  details.evidence summary { cursor: pointer; font-size: 0.88rem; color: var(--violet); }
+  pre.evidence-dump {
+    background: var(--mono-bg); color: var(--mono-ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.8rem; line-height: 1.5;
+    padding: 14px 16px; border-radius: var(--radius);
+    overflow-x: auto; margin: 10px 0 0; white-space: pre-wrap; word-break: break-word;
+  }
+
+  .note { font-size: 0.86rem; color: var(--ink-soft); margin-top: 10px; }
+  .note.caution { color: var(--warn); }
+
+  .same-as { font-size: 0.92rem; color: var(--ink-soft); padding: 14px 20px; border: 1px solid var(--rule); border-radius: var(--radius); margin-top: 18px; }
+
+  .harmonize-box { border: 1px solid var(--rule); border-radius: var(--radius); margin-top: 18px; padding: 18px 20px; background: var(--paper-raised); }
+  .harmonize-box h3 { font-family: "Fraunces", Georgia, serif; font-size: 1.05rem; margin: 0 0 8px; }
+  .harmonize-box.unsupported { background: var(--warn-bg); border-color: var(--warn); }
+  .class-map-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem; }
+  .class-map-table th, .class-map-table td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--rule); }
+  .download-link { display: inline-block; margin-top: 12px; padding: 9px 16px; background: var(--ok); color: var(--paper-raised); border-radius: var(--radius); text-decoration: none; font-weight: 500; font-size: 0.92rem; }
+  .download-link:hover { opacity: 0.88; }
+
+  .about { margin-top: 44px; }
+  .about summary { cursor: pointer; font-weight: 500; }
+  .about ul { padding-left: 1.2em; }
+  .about li { margin-bottom: 0.5em; }
+
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: 0.85rem; }
+
+  .fmt-chip { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.78rem; border: 1px solid var(--rule); color: var(--ink-soft); margin-left: 8px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>What is this blood-cell dataset, really?</h1>
+    <p class="lede">Point it at a folder of microscope images and label files. It works out the annotation format and what the dataset is for, and — for the formats it actually knows how to convert — can harmonize it into a ready-to-train YOLO export. Entirely in your browser; nothing is uploaded anywhere. When it can't tell, or can't harmonize, it says so plainly instead of guessing.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <div class="dropzone" id="dropzone">
+      <p id="dz-label">Choose a dataset folder, or upload a .zip of one</p>
+      <div class="btn-row">
+        <label class="file-btn" for="pick-folder">Choose folder</label>
+        <input type="file" id="pick-folder" webkitdirectory multiple>
+        <label class="file-btn secondary" for="pick-zip">Upload .zip</label>
+        <input type="file" id="pick-zip" accept=".zip,application/zip">
+      </div>
+      <p class="hint" id="folder-support-hint"></p>
+    </div>
+    <div class="status-line" id="status-line" style="display:none;">
+      <div class="spinner"></div>
+      <span id="status-text">Scanning…</span>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div id="scan-summary" class="note"></div>
+    <div id="report-v14"></div>
+    <div id="report-v15-wrap"></div>
+    <div id="harmonize-panel"></div>
+  </div>
+
+  <details class="about">
+    <summary>About this tool, and what it doesn't do</summary>
+    <ul>
+      <li><strong>Two detectors run on every dataset.</strong> The <em>frozen detector (v1.4)</em> is the exact rule set behind the published BloodCellAI results — it is not edited here. The <em>experimental check (v1.5)</em> adds folder-name and image-pairing evidence for segmentation datasets that v1.4 can only see by file name; it was tuned on two real datasets (Raabin-WBC and a Zheng et al. white-blood-cell set), so a result on those two is not a fair, held-out test of it.</li>
+      <li><strong>Harmonization covers five formats.</strong> For VOC XML, COCO JSON, YOLO text, point labels, and classification folders, it can build a harmonized YOLO export (class names discovered from your data, remapped to contiguous ids). There is no harmonizer yet for segmentation masks or custom polygon/bounding-box JSON, and it says so rather than guessing. Everything is exported under a single "train" split; this tool does not assign train/val/test splits.</li>
+      <li><strong>Point-label boxes are a disclosed heuristic.</strong> A labeled point has no natural box size, so one is drawn as a fixed fraction of each image's own real width, not a hard-coded pixel size — still a convention, not a standard, and worth checking against your actual cell sizes.</li>
+      <li><strong>Nothing leaves your browser.</strong> Files are read locally to list names and, for a small sample of label files and images, their contents; none of it is sent anywhere. This matters if your dataset has a restrictive licence.</li>
+      <li><strong>It can abstain, deliberately.</strong> When no rule finds a confident pattern, it reports "not detected" rather than guessing. That is a correct, informative outcome — not a bug.</li>
+      <li><strong>Some image formats can't be decoded in a browser.</strong> TIFF masks, for instance, can't be opened by most browsers' image decoders, so the experimental check falls back to folder-name and pairing evidence alone for those, and says so.</li>
+      <li><strong>Very large selections:</strong> file names are scanned in full (up to 20,000 files); only a small sample of label files and images is actually read.</li>
+    </ul>
+  </details>
+
+  <footer>
+    Runs entirely client-side. Source rules ported from the BloodCellAI project's frozen v1.4 detector and its experimental v1.5 extension.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Detector core — ported from bloodcellai_detect (Python).
+   v1.4 is FROZEN: do not change its rule logic here.
+   ============================================================ */
+const BloodCellDetector = (function () {
+  'use strict';
+  const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff']);
+  const MAX_FILES_SCANNED_DEFAULT = 20000;
+
+  function extOf(name) { const i = name.lastIndexOf('.'); return i <= 0 ? '' : name.slice(i).toLowerCase(); }
+  function stemOf(name) { const i = name.lastIndexOf('.'); return i <= 0 ? name : name.slice(0, i); }
+  function isFloat(x) {
+    if (x === '' || x == null) return false;
+    return Number.isFinite(Number(x)) && /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x.trim());
+  }
+  function looksLikeVocXml(text) { return text.includes('<annotation>') && text.includes('<object>') && text.includes('<bndbox>'); }
+  function safeJsonParse(text) { try { return JSON.parse(text); } catch (e) { return null; } }
+  function topN(map, n) { return Object.fromEntries([...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n)); }
+
+  function buildTree(entries) {
+    const root = { name: '', dirs: new Map(), files: [], pathStr: '' };
+    for (const e of entries) {
+      let node = root; let pathSoFar = '';
+      for (let i = 0; i < e.pathSegs.length - 1; i++) {
+        const seg = e.pathSegs[i];
+        pathSoFar = pathSoFar ? pathSoFar + '/' + seg : seg;
+        if (!node.dirs.has(seg)) node.dirs.set(seg, { name: seg, dirs: new Map(), files: [], pathStr: pathSoFar });
+        node = node.dirs.get(seg);
+      }
+      node.files.push(e);
+    }
+    return root;
+  }
+  function anyImageInSubtree(node) {
+    if (node.files.some((f) => IMAGE_EXTS.has(f.ext))) return true;
+    for (const sub of node.dirs.values()) if (anyImageInSubtree(sub)) return true;
+    return false;
+  }
+  function findClassificationRoot(root, maxDepth) {
+    maxDepth = maxDepth || 5;
+    let current = root, depth = 0;
+    while (depth < maxDepth) {
+      const dirs = [...current.dirs.values()];
+      const imagesHere = current.files.filter((f) => IMAGE_EXTS.has(f.ext)).length;
+      if (dirs.length === 1 && imagesHere === 0) { current = dirs[0]; depth += 1; continue; }
+      break;
+    }
+    return current;
+  }
+
+  async function detectV14(entries, readText, opts) {
+    opts = opts || {};
+    const maxFilesScanned = opts.maxFilesScanned || MAX_FILES_SCANNED_DEFAULT;
+    if (!entries || !entries.length) return { format: 'abstain', role: 'abstain', confidence: 0, evidence: { reason: 'no files found' } };
+    const files = entries.slice(0, maxFilesScanned + 1);
+    const extCounts = new Map();
+    for (const f of files) extCounts.set(f.ext, (extCounts.get(f.ext) || 0) + 1);
+    const imageFiles = files.filter((f) => IMAGE_EXTS.has(f.ext));
+    const xmlFiles = files.filter((f) => f.ext === '.xml');
+    const jsonFiles = files.filter((f) => f.ext === '.json');
+    const txtFiles = files.filter((f) => f.ext === '.txt');
+    const evidence = { n_files_scanned: files.length, n_images: imageFiles.length, ext_counts: topN(extCounts, 10) };
+
+    if (xmlFiles.length) {
+      const sample = xmlFiles.slice(0, 5);
+      let hits = 0;
+      for (const xf of sample) if (looksLikeVocXml(await readText(xf))) hits++;
+      if (hits >= Math.max(1, Math.floor(sample.length / 2))) {
+        evidence.voc_hits = hits + '/' + sample.length;
+        return { format: 'voc_xml', role: 'detection_benchmark', confidence: 0.9, evidence };
+      }
+    }
+    for (const jf of jsonFiles.slice(0, 5)) {
+      const data = safeJsonParse(await readText(jf));
+      if (data && typeof data === 'object' && !Array.isArray(data) && ['images', 'annotations', 'categories'].every((k) => k in data)) {
+        const anns = Array.isArray(data.annotations) ? data.annotations : [];
+        const hasBbox = anns.slice(0, 20).some((a) => a && typeof a === 'object' && 'bbox' in a);
+        if (hasBbox) { evidence.coco_schema = true; return { format: 'coco_json', role: 'detection_benchmark', confidence: 0.9, evidence }; }
+      }
+    }
+    if (txtFiles.length && imageFiles.length) {
+      let checked = 0, matched = 0;
+      for (const tf of txtFiles.slice(0, 20)) {
+        const lines = (await readText(tf)).split('\n').map((l) => l.trim()).filter(Boolean);
+        if (!lines.length) continue;
+        checked++;
+        const sample = lines.slice(0, 5);
+        if (sample.every((l) => { const p = l.split(/\s+/); return p.length === 5 && p.every(isFloat); })) matched++;
+      }
+      if (checked && matched / checked > 0.6) {
+        evidence.yolo_txt_ratio = matched + '/' + checked;
+        return { format: 'yolo_txt', role: 'detection_benchmark', confidence: 0.85, evidence };
+      }
+    }
+    if (txtFiles.length && imageFiles.length) {
+      let checked = 0, pointLike = 0;
+      for (const tf of txtFiles.slice(0, 20)) {
+        const lines = (await readText(tf)).split('\n').map((l) => l.trim()).filter(Boolean);
+        if (!lines.length) continue;
+        checked++;
+        const sample = lines.slice(0, 8);
+        if (sample.every((l) => { const p = l.split(/\s+/); return p.length >= 2 && p.length <= 3 && p.every(isFloat); })) pointLike++;
+      }
+      if (checked && pointLike / checked > 0.6) {
+        evidence.point_txt_ratio = pointLike + '/' + checked;
+        return { format: 'point_labels', role: 'classification_only', confidence: 0.65, evidence };
+      }
+    }
+    if (txtFiles.length && imageFiles.length) {
+      const shapeVotes = new Map();
+      let checked = 0;
+      for (const tf of txtFiles.slice(0, 20)) {
+        const lines = (await readText(tf)).split('\n').map((l) => l.trim()).filter(Boolean);
+        for (const line of lines.slice(1, 9)) {
+          const fields = line.split(',');
+          if (fields.length >= 5) {
+            const shape = fields[3].trim().toLowerCase();
+            if (shape === 'polygon' || shape === 'point') shapeVotes.set(shape, (shapeVotes.get(shape) || 0) + 1);
+          }
+        }
+        if (lines.length) checked++;
+      }
+      const totalVotes = [...shapeVotes.values()].reduce((a, b) => a + b, 0);
+      if (totalVotes >= 2) {
+        const sorted = [...shapeVotes.entries()].sort((a, b) => b[1] - a[1]);
+        const dominant = sorted[0][0], count = sorted[0][1];
+        if (count / totalVotes > 0.6) {
+          evidence.comma_shape_votes = Object.fromEntries(shapeVotes);
+          if (dominant === 'polygon') return { format: 'custom_polygon_json', role: 'detection_benchmark', confidence: 0.65, evidence };
+          return { format: 'point_labels', role: 'classification_only', confidence: 0.65, evidence };
+        }
+      }
+    }
+    for (const jf of jsonFiles.slice(0, 5)) {
+      const parsed = safeJsonParse(await readText(jf));
+      const text = JSON.stringify(parsed == null ? {} : parsed).toLowerCase().slice(0, 4000);
+      if (text.includes('polygon')) { evidence.keyword = 'polygon'; return { format: 'custom_polygon_json', role: 'detection_benchmark', confidence: 0.6, evidence }; }
+      if (text.includes('bbox') || text.includes('bounding')) { evidence.keyword = 'bbox/bounding'; return { format: 'custom_bbox_json', role: 'detection_benchmark', confidence: 0.6, evidence }; }
+      if (text.includes('point') && text.includes('"x"') && text.includes('"y"')) { evidence.keyword = 'point x/y'; return { format: 'point_labels', role: 'classification_only', confidence: 0.55, evidence }; }
+    }
+    const maskLike = files.filter((f) => {
+      const lname = f.name.toLowerCase();
+      return lname.includes('mask') || lname.includes('segmentation') || ['gt', 'groundtruth'].includes(stemOf(f.name).toLowerCase());
+    });
+    if (maskLike.length && imageFiles.length) {
+      evidence.mask_like_count = maskLike.length;
+      return { format: 'segmentation_masks', role: 'segmentation', confidence: 0.7, evidence };
+    }
+    const txtToImageRatio = imageFiles.length ? txtFiles.length / imageFiles.length : 0;
+    const looksLikeRealTxtAnnotations = txtFiles.length >= 3 && txtToImageRatio >= 0.1;
+    const tree = buildTree(files);
+    const classRoot = findClassificationRoot(tree);
+    const subdirs = [...classRoot.dirs.values()];
+    if (subdirs.length >= 2 && !xmlFiles.length && !jsonFiles.length && !looksLikeRealTxtAnnotations) {
+      const sample = subdirs.slice(0, 30);
+      const classLike = sample.filter((d) => anyImageInSubtree(d)).length;
+      if (classLike >= Math.max(2, Math.floor(subdirs.length * 0.6))) {
+        evidence.class_like_subdirs = classLike + '/' + subdirs.length;
+        if (classRoot !== tree) evidence.descended_wrapper_dirs = classRoot.pathStr;
+        return { format: 'classification_folders', role: 'classification_only', confidence: 0.8, evidence };
+      }
+    }
+    if (imageFiles.length && !(xmlFiles.length || jsonFiles.length || txtFiles.length)) {
+      evidence.reason = 'images found, no annotation files of any known kind';
+      return { format: 'unlabelled', role: 'unlabelled', confidence: 0.5, evidence };
+    }
+    evidence.reason = 'no confident signal matched any rule';
+    return { format: 'abstain', role: 'abstain', confidence: 0.0, evidence };
+  }
+
+  const MASK_TOKENS = new Set(['gt', 'gts', 'mask', 'masks', 'grth', 'groundtruth', 'groundtruths', 'segmentation', 'segmentationclass', 'segmentationobject', 'binarymask', 'realmask', 'gtfine']);
+  const MASK_TOKEN_PREFIX = /^(grth|mask)\d*$/;
+  const MASK_PEAK_COUNT = 3, MASK_PEAK_WINDOW = 8, MASK_PEAK_COVERAGE = 0.95;
+  const SAMPLE_FOR_PIXEL_CHECK = 10, MIN_IMAGES_PER_SIDE = 3, MIN_PAIR_GROUPS = 5;
+  const STRONG_EXCLUDE = new Set(['classification_folders', 'unlabelled', 'abstain', 'segmentation_masks']);
+
+  function isMaskDirName(name) {
+    const n = name.trim().toLowerCase();
+    const tokens = n.split(/[^a-z0-9]+/).filter(Boolean);
+    if (tokens.some((t) => MASK_TOKENS.has(t) || MASK_TOKEN_PREFIX.test(t))) return true;
+    return tokens.join('').includes('groundtruth');
+  }
+  async function maskLikeFromImage(entry, getImageBitmap) {
+    let bmp;
+    try { bmp = await getImageBitmap(entry); } catch (e) { return null; }
+    if (!bmp) return null;
+    try {
+      const w = Math.min(bmp.width, 256), h = Math.min(bmp.height, 256);
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      const hist = new Float64Array(256);
+      for (let i = 0; i < data.length; i += 4) {
+        const grey = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+        hist[grey]++;
+      }
+      const idx = [...hist.keys()].sort((a, b) => hist[b] - hist[a]).slice(0, MASK_PEAK_COUNT);
+      const keep = new Array(256).fill(false);
+      for (const p of idx) for (let g = Math.max(0, p - MASK_PEAK_WINDOW); g <= Math.min(255, p + MASK_PEAK_WINDOW); g++) keep[g] = true;
+      let kept = 0, total = 0;
+      for (let g = 0; g < 256; g++) { total += hist[g]; if (keep[g]) kept += hist[g]; }
+      return total > 0 ? (kept / total >= MASK_PEAK_COVERAGE) : null;
+    } catch (e) { return null; } finally { if (bmp && bmp.close) bmp.close(); }
+  }
+  async function pixelCheck(entries, getImageBitmap) {
+    const sample = entries.slice(0, SAMPLE_FOR_PIXEL_CHECK);
+    if (!sample.length) return { verified: false, n: 0 };
+    let ok = 0, determinable = 0;
+    for (const e of sample) {
+      const r = await maskLikeFromImage(e, getImageBitmap);
+      if (r === null) continue;
+      determinable++; if (r) ok++;
+    }
+    if (determinable === 0) return { verified: null, n: 0 };
+    return { verified: (ok / determinable) >= 0.7, n: determinable };
+  }
+  function cmpByPath(a, b) { return a.pathSegs.join('/').localeCompare(b.pathSegs.join('/')); }
+  async function segmentationEvidence(imageFiles, getImageBitmap) {
+    const ev = {};
+    const allSegs = imageFiles.map((f) => f.pathSegs.slice(0, -1));
+    let shared = 0;
+    if (allSegs.length) {
+      const first = allSegs[0];
+      outer: for (let i = 0; i < first.length; i++) {
+        for (const segs of allSegs) if (segs[i] !== first[i]) break outer;
+        shared = i + 1;
+      }
+    }
+    const maskDirImgs = [], otherImgs = [];
+    for (const f of imageFiles) {
+      const dirParts = f.pathSegs.slice(shared, -1);
+      (dirParts.some(isMaskDirName) ? maskDirImgs : otherImgs).push(f);
+    }
+    if (maskDirImgs.length >= MIN_IMAGES_PER_SIDE && otherImgs.length >= MIN_IMAGES_PER_SIDE) {
+      const r = await pixelCheck(maskDirImgs.slice().sort(cmpByPath), getImageBitmap);
+      if (r.verified === null || r.verified) {
+        ev.s1_mask_dir_images = maskDirImgs.length; ev.s1_other_images = otherImgs.length;
+        ev.s1_pixel_check = r.verified === null ? 'undeterminable_names_only' : ('ok(' + r.n + ' sampled)');
+        return { found: true, evidence: ev };
+      }
+      ev.s1_rejected = 'mask-named dirs but pixel check failed (' + r.n + ' sampled)';
+    }
+    const groups = new Map();
+    for (const f of imageFiles) {
+      const key = f.pathSegs.slice(0, -1).join('/') + '\u0000' + stemOf(f.name).toLowerCase();
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(f);
+    }
+    const paired = [...groups.values()].filter((g) => new Set(g.map((x) => x.ext)).size >= 2);
+    if (paired.length >= Math.max(MIN_PAIR_GROUPS, Math.floor(0.5 * groups.size))) {
+      const smaller = paired.map((g) => g.slice().sort((a, b) => (a.size || 0) - (b.size || 0))[0]);
+      const r = await pixelCheck(smaller.slice().sort(cmpByPath), getImageBitmap);
+      let ok = r.verified;
+      if (r.verified === null) {
+        const ratios = paired.slice(0, SAMPLE_FOR_PIXEL_CHECK).map((g) => {
+          const sizes = g.map((x) => x.size || 0).sort((a, b) => a - b);
+          return sizes[0] <= 0.5 * sizes[sizes.length - 1];
+        });
+        ok = (ratios.filter(Boolean).length / Math.max(1, ratios.length)) >= 0.7;
+        ev.s2_pixel_check = 'undeterminable_size_ratio';
+      } else {
+        ev.s2_pixel_check = ok ? ('ok(' + r.n + ' sampled)') : ('failed(' + r.n + ' sampled)');
+      }
+      if (ok) { ev.s2_pair_groups = paired.length; ev.s2_total_groups = groups.size; return { found: true, evidence: ev }; }
+    }
+    return { found: false, evidence: ev };
+  }
+  async function detectV15(entries, readText, getImageBitmap, opts) {
+    const v14 = await detectV14(entries, readText, opts);
+    if (!STRONG_EXCLUDE.has(v14.format) && v14.confidence >= 0.65) return v14;
+    const imageFiles = entries.filter((f) => IMAGE_EXTS.has(f.ext));
+    const res = await segmentationEvidence(imageFiles, getImageBitmap);
+    if (res.found) {
+      const evidence = Object.assign({}, v14.evidence, res.evidence, { v1_4_result: v14.format + '/' + v14.role });
+      return { format: 'segmentation_masks', role: 'segmentation', confidence: 0.75, evidence };
+    }
+    return v14;
+  }
+  function makeEntry(pathSegs, size) {
+    const name = pathSegs[pathSegs.length - 1];
+    return { pathSegs, name, ext: extOf(name), size };
+  }
+  function stripCommonRoot(entries) {
+    if (!entries.length) return entries;
+    const first = entries[0].pathSegs[0];
+    const allShare = entries.every((e) => e.pathSegs.length > 1 && e.pathSegs[0] === first);
+    if (!allShare) return entries;
+    return entries.map((e) => Object.assign({}, e, { pathSegs: e.pathSegs.slice(1) }));
+  }
+  return { IMAGE_EXTS, detectV14, detectV15, makeEntry, stripCommonRoot };
+})();
+
+/*
+Harmonization — ports the REUSABLE, format-correct parts of the project's own
+`bloodcell` Python package (universal data model, VOC/COCO/YOLO parsers, YOLO
+export with contiguous class-id remapping) to JavaScript.
+
+WHAT WAS DELIBERATELY NOT REUSED FROM THE ORIGINAL PACKAGE, AND WHY
+  The original `parse_pascal_xml` and `get_classes()` map class names through a
+  hardcoded, 6-dataset-specific table (CLASS_MAP / DATASET_REGISTRY: RBC, WBC,
+  Platelet, Parasite). On a VOC/COCO dataset with any other class vocabulary,
+  that table would silently DROP every unmatched object (the original code
+  even logs a warning that it does this). That is exactly the kind of silent
+  wrong-information this project has avoided everywhere else, so for a public
+  tool fed arbitrary datasets, classes are discovered dynamically from the
+  data itself instead: every class/category name actually seen is kept, in
+  first-seen order, then remapped to a contiguous 0..N-1 id per the ORIGINAL
+  package's export_yolo() convention (only the id *assignment* differs; the
+  remapping mechanism itself, and the label/data.yaml file formats, are a
+  direct port).
+
+WHAT THIS DOES NOT COVER
+  There is no general parser for custom_polygon_json / custom_bbox_json /
+  segmentation_masks in the original package either (it has adapters for an
+  earlier 6-dataset benchmark only: BCCD/VOC, a generic YOLO adapter, a
+  generic COCO adapter, Chula/RBCMorphology-style point labels, and whole-
+  image classification). Harmonization below covers exactly those five
+  formats and says plainly when a detected format has no harmonizer.
+*/
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.BloodCellHarmonize = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const SUPPORTED_FORMATS = new Set(['voc_xml', 'yolo_txt', 'coco_json', 'classification_folders', 'point_labels']);
+
+  function isFloat(x) {
+    if (x === '' || x == null) return false;
+    return Number.isFinite(Number(x)) && /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x.trim());
+  }
+
+  // ---------- VOC XML (direct port of parse_pascal_xml, minus the hardcoded CLASS_MAP) ----------
+  // Returns {width, height, objects: [{className, xc, yc, w, h}]}
+  function parseVocXml(text) {
+    const doc = new DOMParser().parseFromString(text, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('not valid XML');
+    const sizeEl = doc.querySelector('size');
+    const width = parseFloat(sizeEl?.querySelector('width')?.textContent || '0');
+    const height = parseFloat(sizeEl?.querySelector('height')?.textContent || '0');
+    const objects = [];
+    for (const obj of doc.querySelectorAll('object')) {
+      const className = obj.querySelector('name')?.textContent?.trim();
+      const box = obj.querySelector('bndbox');
+      if (!className || !box || !width || !height) continue;
+      const xmin = parseFloat(box.querySelector('xmin')?.textContent || 'NaN');
+      const ymin = parseFloat(box.querySelector('ymin')?.textContent || 'NaN');
+      const xmax = parseFloat(box.querySelector('xmax')?.textContent || 'NaN');
+      const ymax = parseFloat(box.querySelector('ymax')?.textContent || 'NaN');
+      if ([xmin, ymin, xmax, ymax].some((v) => !Number.isFinite(v))) continue;
+      objects.push({
+        className,
+        xc: ((xmin + xmax) / 2) / width, yc: ((ymin + ymax) / 2) / height,
+        w: (xmax - xmin) / width, h: (ymax - ymin) / height,
+      });
+    }
+    return { width, height, objects };
+  }
+
+  // ---------- YOLO txt: already normalized; pass through, keeping the raw class id as a string "name" ----------
+  // (there is no name available in a .txt file; the id itself is kept as the display name, e.g. "class 2")
+  function parseYoloTxt(text) {
+    const objects = [];
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line) continue;
+      const parts = line.split(/\s+/);
+      if (parts.length !== 5 || !parts.every(isFloat)) continue;
+      const [cls, xc, yc, w, h] = parts.map(Number);
+      objects.push({ className: 'class ' + cls, xc, yc, w, h });
+    }
+    return objects;
+  }
+
+  // ---------- Point labels (ported from parse_chula_txt / parse_rbc_morphology_txt's x,y,class
+  // convention, generalized: uses the REAL decoded image size per image instead of a hardcoded
+  // 640x480 canvas, and a configurable box size given as a FRACTION of image width rather than a
+  // fixed 70px, so it scales across images of different sizes). This is a disclosed heuristic, not
+  // a format standard: there is no "correct" box size for a single labeled point. ----------
+  function parsePointTxt(text, width, height, boxFraction) {
+    const objects = [];
+    const boxWFrac = boxFraction, boxHFrac = boxFraction * (width > 0 ? width : 1) / (height > 0 ? height : 1);
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line) continue;
+      const parts = line.split(/\s+/);
+      if (parts.length < 2 || parts.length > 3 || !parts.slice(0, 2).every(isFloat)) continue;
+      const x = Number(parts[0]), y = Number(parts[1]);
+      const cls = parts.length === 3 ? parts[2] : '0';
+      if (!width || !height) continue;
+      objects.push({
+        className: 'class ' + cls,
+        xc: x / width, yc: y / height,
+        w: boxWFrac, h: Math.min(1, boxHFrac),
+      });
+    }
+    return objects;
+  }
+
+  // ---------- COCO JSON (direct port of parse_coco_json) ----------
+  // Returns {imagesByFilename: Map(filename -> {width,height,annotations:[{className,xc,yc,w,h}]})}
+  function parseCocoJson(data) {
+    const categories = new Map();
+    for (const c of data.categories || []) categories.set(c.id, c.name || ('Class_' + c.id));
+    const imagesById = new Map();
+    for (const im of data.images || []) {
+      imagesById.set(im.id, { file_name: im.file_name || '', width: im.width || 0, height: im.height || 0, annotations: [] });
+    }
+    for (const ann of data.annotations || []) {
+      const rec = imagesById.get(ann.image_id);
+      if (rec) rec.annotations.push(ann);
+    }
+    const imagesByFilename = new Map();
+    for (const rec of imagesById.values()) if (rec.file_name) imagesByFilename.set(rec.file_name, rec);
+    return { imagesByFilename, categories };
+  }
+
+  function cocoRecordToObjects(rec, categories) {
+    const { width, height } = rec;
+    const objects = [];
+    for (const ann of rec.annotations) {
+      const className = categories.get(ann.category_id) || ('Class_' + ann.category_id);
+      const [x, y, bw, bh] = ann.bbox || [0, 0, 0, 0];
+      if (!width || !height) continue;
+      objects.push({ className, xc: (x + bw / 2) / width, yc: (y + bh / 2) / height, w: bw / width, h: bh / height });
+    }
+    return objects;
+  }
+
+  // ---------- Contiguous class-id remap (direct port of export_yolo's remap step) ----------
+  // classNamesInFirstSeenOrder: array of unique class names as encountered; returns a Map name->id
+  // assigned by SORTED name (matches the original code's "sorted(id_to_name.keys())" ordering,
+  // generalized from numeric ids to names since classes are discovered from data, not a registry).
+  function buildClassRegistry(allClassNames) {
+    const unique = [...new Set(allClassNames)].sort();
+    const nameToId = new Map(unique.map((name, i) => [name, i]));
+    return { nameToId, idToName: unique };
+  }
+
+  // ---------- Build a YOLO export in memory: {labelFiles: Map(relPath->text), imageFiles: Map(relPath->entry), dataYaml, classRegistry, warnings} ----------
+  // `perImage` is an array of {stem, ext, objects: [{className,xc,yc,w,h}], sourceEntry}
+  function buildYoloExport(perImage) {
+    const allClassNames = [];
+    for (const img of perImage) for (const o of img.objects) allClassNames.push(o.className);
+    const { nameToId, idToName } = buildClassRegistry(allClassNames);
+    const labelFiles = new Map();
+    for (const img of perImage) {
+      const lines = img.objects.map((o) => {
+        const id = nameToId.get(o.className);
+        return `${id} ${o.xc.toFixed(6)} ${o.yc.toFixed(6)} ${o.w.toFixed(6)} ${o.h.toFixed(6)}`;
+      });
+      labelFiles.set(`train/labels/${img.stem}.txt`, lines.join('\n') + (lines.length ? '\n' : ''));
+    }
+    const dataYaml = [
+      'train: train/images', 'val: val/images', 'test: test/images',
+      `nc: ${idToName.length}`, `names: [${idToName.map((n) => JSON.stringify(n)).join(', ')}]`,
+    ].join('\n') + '\n';
+    return { labelFiles, dataYaml, classRegistry: { nameToId, idToName } };
+  }
+
+  return { SUPPORTED_FORMATS, parseVocXml, parseYoloTxt, parsePointTxt, parseCocoJson, cocoRecordToObjects, buildClassRegistry, buildYoloExport };
+});
+
+
+/* ============================================================
+   Page wiring: gather entries from a folder picker or a zip,
+   run both detectors, render the results. No network calls.
+   ============================================================ */
+(function () {
+  'use strict';
+  const dz = document.getElementById('dropzone');
+  const dzLabel = document.getElementById('dz-label');
+  const pickFolder = document.getElementById('pick-folder');
+  const pickZip = document.getElementById('pick-zip');
+  const statusLine = document.getElementById('status-line');
+  const statusText = document.getElementById('status-text');
+  const results = document.getElementById('results');
+  const scanSummary = document.getElementById('scan-summary');
+  const reportV14 = document.getElementById('report-v14');
+  const reportV15Wrap = document.getElementById('report-v15-wrap');
+  const folderHint = document.getElementById('folder-support-hint');
+
+  const supportsDirPicker = 'webkitdirectory' in document.createElement('input');
+  if (!supportsDirPicker) {
+    const folderLabel = document.querySelector('label[for="pick-folder"]');
+    if (folderLabel) folderLabel.style.display = 'none';
+    folderHint.textContent = 'Your browser can\u2019t open a folder picker here — use "Upload .zip" instead.';
+  } else {
+    folderHint.textContent = 'Nothing is uploaded. All processing happens on this device.';
+  }
+
+  const FORMAT_LABELS = {
+    voc_xml: 'Pascal VOC XML', coco_json: 'COCO JSON', yolo_txt: 'YOLO text labels',
+    point_labels: 'Point labels', custom_polygon_json: 'Custom polygon/point JSON',
+    custom_bbox_json: 'Custom bounding-box JSON', classification_folders: 'Class-folder layout',
+    segmentation_masks: 'Segmentation masks (image + mask pairs)', unlabelled: 'Images only — no label files found',
+    abstain: 'Not detected',
+  };
+  const ROLE_LABELS = {
+    detection_benchmark: 'Object detection dataset', classification_only: 'Classification dataset',
+    segmentation: 'Segmentation dataset', unlabelled: 'Unlabelled images', abstain: 'Not determined',
+  };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function statusClassFor(result) {
+    if (result.format === 'abstain') return 'warn';
+    if (result.format === 'unlabelled') return 'warn';
+    return 'ok';
+  }
+
+  function renderReport(container, title, sub, result) {
+    const cls = statusClassFor(result);
+    const fmtLabel = FORMAT_LABELS[result.format] || result.format;
+    const roleLabel = ROLE_LABELS[result.role] || result.role;
+    const isAbstain = result.format === 'abstain';
+    const evJson = JSON.stringify(result.evidence, null, 2);
+    container.innerHTML =
+      '<div class="report">' +
+        '<div class="report-head ' + cls + '">' +
+          '<div>' +
+            '<p class="report-eyebrow">' + escapeHtml(title) + '</p>' +
+            '<p class="report-title">' + (isAbstain ? 'Not detected' : escapeHtml(fmtLabel)) + '</p>' +
+            (sub ? '<p class="report-sub">' + escapeHtml(sub) + '</p>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="report-body">' +
+          (isAbstain
+            ? '<p class="note">Neither this detector\u2019s rules found a pattern they recognize in this dataset. That doesn\u2019t mean the dataset is invalid — it means its layout doesn\u2019t match any of the patterns currently built in. See the evidence below for what was and wasn\u2019t found.</p>'
+            : '<dl class="kv">' +
+                '<dt>Format</dt><dd>' + escapeHtml(fmtLabel) + '</dd>' +
+                '<dt>Role</dt><dd>' + escapeHtml(roleLabel) + '</dd>' +
+                '<dt>Confidence</dt><dd>' + result.confidence.toFixed(2) + '</dd>' +
+              '</dl>') +
+          '<details class="evidence"><summary>Evidence</summary><pre class="evidence-dump">' + escapeHtml(evJson) + '</pre></details>' +
+        '</div>' +
+      '</div>';
+  }
+
+  async function getImageBitmapFor(entry) {
+    const blob = entry.kind === 'zip' ? await entry.zipRef.async('blob') : entry.fileRef;
+    return await createImageBitmap(blob);
+  }
+  async function readTextFor(entry) {
+    if (entry.kind === 'zip') return await entry.zipRef.async('text');
+    return await entry.fileRef.text();
+  }
+
+  function entriesFromFileList(fileList) {
+    const out = [];
+    for (const f of fileList) {
+      const rel = f.webkitRelativePath || f.name;
+      const segs = rel.split('/').filter(Boolean);
+      const e = BloodCellDetector.makeEntry(segs, f.size);
+      e.kind = 'file'; e.fileRef = f;
+      out.push(e);
+    }
+    return out;
+  }
+  async function entriesFromZip(file) {
+    const zip = await JSZip.loadAsync(file);
+    const out = [];
+    zip.forEach((relPath, zipEntry) => {
+      if (zipEntry.dir) return;
+      const segs = relPath.split('/').filter(Boolean);
+      if (!segs.length) return;
+      const e = BloodCellDetector.makeEntry(segs, (zipEntry._data && zipEntry._data.uncompressedSize) || 0);
+      e.kind = 'zip'; e.zipRef = zipEntry;
+      out.push(e);
+    });
+    return out;
+  }
+
+  function setStatus(text) {
+    if (text == null) { statusLine.style.display = 'none'; return; }
+    statusLine.style.display = 'flex';
+    statusText.textContent = text;
+  }
+
+  async function runDetection(rawEntries, sourceLabel) {
+    results.classList.remove('show');
+    reportV14.innerHTML = ''; reportV15Wrap.innerHTML = ''; scanSummary.textContent = '';
+    if (!rawEntries.length) {
+      setStatus(null);
+      scanSummary.innerHTML = '<p class="note caution">No files were found in ' + escapeHtml(sourceLabel) + '. Nothing to detect.</p>';
+      results.classList.add('show');
+      return;
+    }
+    setStatus('Scanning ' + rawEntries.length.toLocaleString() + ' files\u2026');
+    await new Promise((r) => setTimeout(r, 0)); // let the status line paint before the scan
+
+    let entries;
+    try {
+      entries = BloodCellDetector.stripCommonRoot(rawEntries);
+      const v14 = await BloodCellDetector.detectV14(entries, readTextFor);
+      setStatus('Running the experimental check\u2026');
+      await new Promise((r) => setTimeout(r, 0));
+      const v15 = await BloodCellDetector.detectV15(entries, readTextFor, getImageBitmapFor);
+      setStatus(null);
+
+      const totalFiles = rawEntries.length;
+      const scanned = v14.evidence.n_files_scanned;
+      scanSummary.innerHTML = scanned < totalFiles
+        ? '<p class="note caution">Found ' + totalFiles.toLocaleString() + ' files; scanned the first ' + scanned.toLocaleString() + ' (this tool caps scanning at 20,000 files). Results below are based on that sample.</p>'
+        : '<p class="note">Scanned all ' + totalFiles.toLocaleString() + ' files in ' + escapeHtml(sourceLabel) + '.</p>';
+
+      renderReport(reportV14, 'Frozen detector (v1.4) — matches the published results', null, v14);
+
+      const same = v15.format === v14.format && v15.role === v14.role;
+      if (same) {
+        reportV15Wrap.innerHTML = '<div class="same-as">The experimental check (v1.5, post-hoc) agrees with the frozen detector above.</div>';
+      } else {
+        renderReport(reportV15Wrap, 'Experimental check (v1.5, post-hoc)', 'Found something the frozen detector missed. Tuned on two real datasets — treat this as informative, not as a held-out guarantee.', v15);
+      }
+      await renderHarmonizePanel(entries, v14.format, sourceLabel);
+      results.classList.add('show');
+    } catch (err) {
+      setStatus(null);
+      scanSummary.innerHTML = '<p class="note caution">Could not finish scanning ' + escapeHtml(sourceLabel) + ': ' + escapeHtml(err && err.message ? err.message : String(err)) + '. If this was a .zip, check that the file isn\u2019t corrupted.</p>';
+      results.classList.add('show');
+    }
+  }
+
+  const FORMAT_HARMONIZE_NOTE = {
+    segmentation_masks: 'There is no mask-based harmonizer yet (the reference pipeline this tool ports has no general mask converter either).',
+    custom_polygon_json: 'There is no general polygon/point JSON harmonizer yet — only VOC XML, COCO JSON, YOLO text, point labels, and classification folders are supported.',
+    custom_bbox_json: 'There is no general custom bounding-box JSON harmonizer yet — only VOC XML, COCO JSON, YOLO text, point labels, and classification folders are supported.',
+    unlabelled: 'There is nothing to harmonize: no label files were found for these images.',
+    abstain: 'Harmonization needs a known format first, and none was detected.',
+  };
+
+  function stemKey(pathSegs) { return pathSegs.slice(0, -1).join('/') + '/' + pathSegs[pathSegs.length - 1].replace(/\.[^.]+$/, ''); }
+
+  async function gatherPerImage(entries, format) {
+    const warnings = [];
+    const images = entries.filter((e) => BloodCellDetector.IMAGE_EXTS.has(e.ext));
+    const perImage = [];
+
+    if (format === 'classification_folders') {
+      for (const img of images) {
+        const parent = img.pathSegs[img.pathSegs.length - 2];
+        if (!parent) { warnings.push(img.pathSegs.join('/') + ': not inside any class folder, skipped'); continue; }
+        perImage.push({ stem: stemKey(img.pathSegs), sourceEntry: img, objects: [{ className: parent, xc: 0.5, yc: 0.5, w: 1.0, h: 1.0 }] });
+      }
+      return { perImage, warnings };
+    }
+
+    if (format === 'voc_xml') {
+      const xmlFiles = entries.filter((e) => e.ext === '.xml');
+      const byKey = new Map(images.map((e) => [stemKey(e.pathSegs), e]));
+      for (const xf of xmlFiles) {
+        const key = stemKey(xf.pathSegs);
+        const img = byKey.get(key);
+        if (!img) { warnings.push(key + '.xml: no matching image file, skipped'); continue; }
+        let parsed;
+        try { parsed = BloodCellHarmonize.parseVocXml(await readTextFor(xf)); }
+        catch (e) { warnings.push(key + '.xml: could not parse as VOC XML (' + e.message + '), skipped'); continue; }
+        perImage.push({ stem: key, sourceEntry: img, objects: parsed.objects });
+      }
+      return { perImage, warnings };
+    }
+
+    if (format === 'yolo_txt') {
+      const txtFiles = entries.filter((e) => e.ext === '.txt');
+      const byKey = new Map(images.map((e) => [stemKey(e.pathSegs), e]));
+      for (const tf of txtFiles) {
+        const key = stemKey(tf.pathSegs);
+        const img = byKey.get(key);
+        if (!img) continue; // a stray .txt with no matching image is not an error for this format
+        const objects = BloodCellHarmonize.parseYoloTxt(await readTextFor(tf));
+        perImage.push({ stem: key, sourceEntry: img, objects });
+      }
+      return { perImage, warnings };
+    }
+
+    if (format === 'point_labels') {
+      const txtFiles = entries.filter((e) => e.ext === '.txt');
+      const byKey = new Map(images.map((e) => [stemKey(e.pathSegs), e]));
+      const BOX_FRACTION = 70 / 640; // the reference pipeline's own 70px-on-a-640px-canvas convention, generalized as a fraction
+      for (const tf of txtFiles) {
+        const key = stemKey(tf.pathSegs);
+        const img = byKey.get(key);
+        if (!img) continue;
+        let bmp;
+        try { bmp = await getImageBitmapFor(img); } catch (e) { warnings.push(key + ': image could not be decoded to get its real size, skipped'); continue; }
+        const objects = BloodCellHarmonize.parsePointTxt(await readTextFor(tf), bmp.width, bmp.height, BOX_FRACTION);
+        if (bmp.close) bmp.close();
+        perImage.push({ stem: key, sourceEntry: img, objects });
+      }
+      return { perImage, warnings };
+    }
+
+    if (format === 'coco_json') {
+      const jsonFiles = entries.filter((e) => e.ext === '.json');
+      if (!jsonFiles.length) { warnings.push('no .json file found'); return { perImage, warnings }; }
+      const data = JSON.parse(await readTextFor(jsonFiles[0]));
+      const { imagesByFilename, categories } = BloodCellHarmonize.parseCocoJson(data);
+      const byName = new Map(images.map((e) => [e.name, e]));
+      for (const [filename, rec] of imagesByFilename) {
+        const img = byName.get(filename);
+        if (!img) { warnings.push(filename + ': listed in the COCO file but not found among the attached images, skipped'); continue; }
+        const objects = BloodCellHarmonize.cocoRecordToObjects(rec, categories);
+        perImage.push({ stem: stemKey(img.pathSegs), sourceEntry: img, objects });
+      }
+      return { perImage, warnings };
+    }
+
+    return { perImage, warnings };
+  }
+
+  async function renderHarmonizePanel(entries, format, sourceLabel) {
+    const panel = document.getElementById('harmonize-panel');
+    if (!BloodCellHarmonize.SUPPORTED_FORMATS.has(format)) {
+      panel.innerHTML = '<div class="harmonize-box unsupported"><h3>Harmonization</h3><p class="note">' +
+        escapeHtml(FORMAT_HARMONIZE_NOTE[format] || 'There is no harmonizer for this format yet.') + '</p></div>';
+      return;
+    }
+    panel.innerHTML = '<div class="harmonize-box"><h3>Harmonize this dataset</h3>' +
+      '<p class="note">Converts every annotated image into one shared YOLO-format export: class names are discovered from your data (not a fixed list) and remapped to contiguous ids, alphabetically. Everything is written under a single "train" split — this tool does not assign train/val/test splits.</p>' +
+      '<button id="harmonize-btn">Build harmonized YOLO export</button><div id="harmonize-result"></div></div>';
+    document.getElementById('harmonize-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('harmonize-btn');
+      const out = document.getElementById('harmonize-result');
+      btn.disabled = true;
+      out.innerHTML = '<p class="note">Harmonizing\u2026</p>';
+      await new Promise((r) => setTimeout(r, 0));
+      try {
+        const { perImage, warnings } = await gatherPerImage(entries, format);
+        if (!perImage.length) {
+          out.innerHTML = '<p class="note caution">No images could be matched to a label for this format in ' + escapeHtml(sourceLabel) + '. Nothing to export.</p>';
+          btn.disabled = false;
+          return;
+        }
+        const built = BloodCellHarmonize.buildYoloExport(perImage);
+        const zip = new JSZip();
+        for (const [path, text] of built.labelFiles) zip.file(path, text);
+        zip.file('data.yaml', built.dataYaml);
+        for (const img of perImage) {
+          const entry = img.sourceEntry;
+          const blob = entry.kind === 'zip' ? await entry.zipRef.async('blob') : entry.fileRef;
+          zip.file('train/images/' + entry.name, blob);
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(zipBlob);
+        const classRows = built.classRegistry.idToName.map((name, id) => '<tr><td>' + escapeHtml(name) + '</td><td>' + id + '</td></tr>').join('');
+        out.innerHTML =
+          '<p class="note">Harmonized ' + perImage.length + ' image' + (perImage.length === 1 ? '' : 's') + ', ' + built.classRegistry.idToName.length + ' class' + (built.classRegistry.idToName.length === 1 ? '' : 'es') + '.' +
+          (warnings.length ? ' ' + warnings.length + ' file' + (warnings.length === 1 ? '' : 's') + ' skipped (see evidence below).' : '') + '</p>' +
+          '<table class="class-map-table"><tr><th>Class name (as found in your data)</th><th>YOLO id</th></tr>' + classRows + '</table>' +
+          '<a class="download-link" href="' + url + '" download="harmonized_yolo_export.zip">Download harmonized_yolo_export.zip</a>' +
+          (warnings.length ? '<details class="evidence"><summary>Skipped files</summary><pre class="evidence-dump">' + escapeHtml(warnings.join('\n')) + '</pre></details>' : '');
+      } catch (err) {
+        out.innerHTML = '<p class="note caution">Could not build the export: ' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>';
+      }
+      btn.disabled = false;
+    });
+  }
+
+  pickFolder.addEventListener('change', (e) => {
+    const files = e.target.files;
+    if (!files || !files.length) return;
+    runDetection(entriesFromFileList(files), 'the selected folder');
+  });
+  pickZip.addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setStatus('Reading ' + file.name + '\u2026');
+    await new Promise((r) => setTimeout(r, 0));
+    try {
+      const entries = await entriesFromZip(file);
+      runDetection(entries, file.name);
+    } catch (err) {
+      setStatus(null);
+      scanSummary.innerHTML = '<p class="note caution">Could not open ' + escapeHtml(file.name) + ' as a .zip archive: ' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>';
+      results.classList.add('show');
+    }
+  });
+
+  ['dragenter', 'dragover'].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove('drag'); }));
+  dz.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    if (dt.items && dt.items.length && dt.items[0].webkitGetAsEntry && dt.items[0].webkitGetAsEntry().isDirectory) {
+      scanSummary.innerHTML = '<p class="note caution">Drag-and-drop of a folder isn\u2019t supported here yet — please use the "Choose folder" or "Upload .zip" button instead.</p>';
+      results.classList.add('show');
+      return;
+    }
+    const file = dt.files && dt.files[0];
+    if (file && /\.zip$/i.test(file.name)) {
+      pickZip.files = dt.files;
+      pickZip.dispatchEvent(new Event('change'));
+    }
+  });
+})();
+</script>
+</body>
+</html>

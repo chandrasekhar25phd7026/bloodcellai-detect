@@ -1,0 +1,12 @@
+{
+  "title": "bloodcellai-detect: rule-based annotation-format and role detection for blood-cell imaging datasets",
+  "upload_type": "software",
+  "description": "Python package containing the frozen format/role detector v1.4 used in the accompanying manuscript, an experimental v1.5 with directory- and pair-based segmentation evidence, the ground-truth locking and E1 audit tooling (Wilson confidence intervals, role confusion matrix, six-type mutation stress test), tests built from synthetic dataset layouts, and example ground-truth tables. No dataset images are included.",
+  "creators": [
+    {"name": "Muttangi, Chandrasekhar", "affiliation": "VIT-AP University, Andhra Pradesh, India"},
+    {"name": "Dalai, Ashish Kumar", "affiliation": "VIT-AP University, Andhra Pradesh, India"}
+  ],
+  "license": "MIT",
+  "keywords": ["blood cell", "dataset harmonization", "annotation format detection", "peripheral blood smear", "reproducibility"],
+  "access_right": "open"
+}

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bloodcellai-detect"
+version = "1.0.0"
+description = "Rule-based annotation-format and role detection for blood-cell imaging datasets (frozen v1.4 plus experimental v1.5)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Muttangi Chandrasekhar" }, { name = "Ashish Kumar Dalai" }]
+keywords = ["blood cell", "dataset", "annotation format", "peripheral blood smear", "reproducibility"]
+dependencies = []
+
+[project.optional-dependencies]
+masks = ["Pillow", "numpy"]
+validate = ["Pillow", "numpy"]
+test = ["pytest", "numpy", "Pillow"]
+
+[project.scripts]
+bloodcellai-detect = "bloodcellai_detect.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]

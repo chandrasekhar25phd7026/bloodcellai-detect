@@ -1,0 +1,13 @@
+{
+  "name": "bloodcellai-detect-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser-only format/role detector and harmonizer (blood-cell-dataset-detector.html) plus its tests.",
+  "scripts": {
+    "test": "node tests/test_harmonize.node.js && node tests/make_test_html.js && node tests/e2e_detect.node.js && node tests/e2e_harmonize.node.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "jszip": "^3.10.1"
+  }
+}
