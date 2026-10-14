@@ -149,4 +149,4 @@ See `CITATION.cff` (a DOI is minted by Zenodo when a GitHub release is archived)
 
 ## License
 
-MIT (code). Confirm this choice with your supervisor and institution before publishing.
+This project is licensed under the MIT License. See the LICENSE file for details.
