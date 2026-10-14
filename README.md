@@ -1,5 +1,7 @@
 # bloodcellai-detect
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23367315.svg)](https://doi.org/10.5281/zenodo.23367315)
+
 Rule-based detection of the **annotation format** and the **role** (detection benchmark, classification only,
 segmentation, unlabelled) of blood-cell imaging dataset folders. It uses structural rules and file contents only.
 **No trained model is involved.** The detector can abstain instead of guessing.

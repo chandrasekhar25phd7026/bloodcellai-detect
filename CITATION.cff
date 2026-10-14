@@ -2,17 +2,17 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "bloodcellai-detect: rule-based annotation-format and role detection for blood-cell imaging datasets"
 version: 1.0.0
-date-released: "2026-10-13"   
+date-released: "2026-10-14"   
 type: software
 authors:
   - family-names: "Muttangi"      
     given-names: "Chandrasekhar"
     affiliation: "VIT-AP University, Andhra Pradesh, India"
-    # orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX"   # TODO
+    orcid: "https://orcid.org/0009-0001-9060-1701"   
   - family-names: "Dalai"
     given-names: "Ashish Kumar"
-    affiliation: "VIT-AP University, Andhra Pradesh, India"
-    # orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX"   # TODO
-repository-code: "https://github.com/chandrasekhar25phd7026/bloodcellai-detect"   # TODO
+    affiliation: "VIT-AP University, Andhra Pradesh, India"  
+repository-code: "https://github.com/chandrasekhar25phd7026/bloodcellai-detect"
+doi: "10.5281/zenodo.23367315" 
 license: MIT
 keywords: [blood cell, dataset harmonization, annotation format detection, peripheral blood smear]
