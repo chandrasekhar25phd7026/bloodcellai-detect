@@ -94,3 +94,39 @@ def test_check_real_defects_finds_preexisting_zero_area_box():
     assert result["n_raw_objects"] == 2
     assert result["n_real_defects_found"] == 1
     assert result["examples"][0]["file"] == "a.xml"
+
+
+def test_validate_annotations_on_empty_label_file_returns_empty_list():
+    # An empty label file (no objects at all) must not crash the validator or the
+    # callers that iterate its output -- added in response to external review.
+    assert validate_annotations([], 100, 100) == []
+
+
+def test_validate_flags_zero_height_as_well_as_zero_width():
+    objs = [box("RBC", 10, 10, 30, 10)]  # zero height, non-zero width
+    flags = validate_annotations(objs, 100, 100)
+    assert flags[0] == {"zero_area"}
+
+
+def test_box_exactly_on_image_boundary_is_not_flagged():
+    # Touching the edge of the image is a valid box, not an out-of-bounds defect.
+    objs = [box("RBC", 0, 0, 100, 100)]
+    flags = validate_annotations(objs, 100, 100)
+    assert flags[0] == set()
+
+
+def test_duplicate_detection_is_robust_to_whitespace_differences_in_the_source_line():
+    # Duplicate-line detection operates on parsed, numeric coordinates, not raw text --
+    # so two label lines that differ only in whitespace must still be caught as
+    # duplicates once parsed, the same as identically-formatted duplicate lines.
+    def parse_yolo_line(line, img_w, img_h):
+        cid, xc, yc, bw, bh = (float(x) for x in line.split())
+        x1, y1 = (xc - bw / 2) * img_w, (yc - bh / 2) * img_h
+        x2, y2 = (xc + bw / 2) * img_w, (yc + bh / 2) * img_h
+        return dict(cls_name=str(int(cid)), x1=x1, y1=y1, x2=x2, y2=y2)
+
+    line_a = "0 0.500000 0.500000 0.200000 0.200000"
+    line_b = "0   0.500000    0.500000  0.200000 0.200000"  # extra internal whitespace
+    objs = [parse_yolo_line(line_a, 100, 100), parse_yolo_line(line_b, 100, 100)]
+    flags = validate_annotations(objs, 100, 100)
+    assert flags[0] == {"duplicate"} and flags[1] == {"duplicate"}

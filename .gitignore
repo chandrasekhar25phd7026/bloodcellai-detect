@@ -2,9 +2,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
-build/
-dist/
-e1_audit_out/
-*.lock.json
+.DS_Store
+.ipynb_checkpoints/
+node_modules/
+*.log
 web/index.test.html
-web/node_modules/

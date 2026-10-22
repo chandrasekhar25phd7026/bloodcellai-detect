@@ -178,6 +178,17 @@ def scan_datasets(dataset_roots: Dict[str, Path], hash_size: int = 8, n_bands: i
 
     # per-pair-key sampling (not a single global top-N), so one dataset's internal redundancy
     # cannot starve every other pair's review sample -- see module docstring.
+    #
+    # IMPORTANT: `review_sample` below is capped for a HUMAN to look at, and is NOT a complete
+    # list of every pair within `hamming_threshold` -- when a pair-key has more true candidates
+    # than its share of `max_review_sample`, the closest ones are kept and the rest are left out
+    # of `review_sample`, not dropped from consideration. An earlier version of this project's
+    # own guidance built the final *exclusion* list from `review_sample` directly, which silently
+    # under-counted real duplicates whenever a dataset pair had more candidates than its cap (a
+    # real run found 151 confirmed bccd/txl_pbc pairs this way when a more exhaustive, uncapped
+    # check found 160). For deciding what to EXCLUDE, use `all_pairs_by_key` below, which is
+    # never capped; use `review_sample` only for what a person should look at by eye to catch
+    # false positives (as done for bbbc041 and malaria_polygon elsewhere in this project).
     per_key_pairs: Dict[Tuple[str, str], list] = defaultdict(list)
     for (ds_a, path_a), (ds_b, path_b), d in pairs:
         per_key_pairs[tuple(sorted((ds_a, ds_b)))].append(((ds_a, path_a), (ds_b, path_b), d))
@@ -215,6 +226,12 @@ def scan_datasets(dataset_roots: Dict[str, Path], hash_size: int = 8, n_bands: i
         review_sample=[dict(dataset_a=a, path_a=pa, dataset_b=b, path_b=pb, hamming_distance=d,
                              scope=("within_dataset" if a == b else "cross_dataset"))
                        for (a, pa), (b, pb), d in review_sample],
+        # Every pair within hamming_threshold, never capped -- use this (not review_sample) to
+        # decide what to exclude. See the note above per_key_pairs for why review_sample alone
+        # is not safe to use for exclusion.
+        all_pairs=[dict(dataset_a=a, path_a=pa, dataset_b=b, path_b=pb, hamming_distance=d,
+                         scope=("within_dataset" if a == b else "cross_dataset"))
+                   for (a, pa), (b, pb), d in pairs],
     )
 
 

@@ -1,7 +1,7 @@
 # GitHub and Zenodo release checklist
 
-1. **Decide the licence.** MIT is a placeholder. Confirm with your supervisor and VIT-AP's IP policy.
-2. **Fill placeholders:** repository URL and release date in `CITATION.cff`, README clone URL, ORCIDs, family-name order of the authors.
+1. **License.** The software is released under the MIT License.
+2. **Verify author metadata.** Confirm author name order and add ORCID identifiers only after verifying them.
 3. **Run the tests locally:** `pip install -e ".[test]" && pytest -q` (expect all passing).
 4. **Create the GitHub repository** (public) and push. The workflow in `.github/workflows/tests.yml` runs the tests on three Python versions.
 5. **Connect Zenodo:** log in to zenodo.org with GitHub, enable the repository under *GitHub* settings.
