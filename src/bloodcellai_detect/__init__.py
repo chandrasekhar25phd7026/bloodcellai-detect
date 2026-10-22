@@ -6,8 +6,11 @@ annotation validator, and a near-duplicate/leakage screen, for blood-cell imagin
   standard library; always importable.
 - `bloodcellai_detect.duplicates`: near-duplicate and leakage screen (Section 4.4).
   Needs Pillow and NumPy: pip install "bloodcellai-detect[validate]".
+- `bloodcellai_detect.merge`: union-ontology construction, reliable multi-dataset merge
+  export (Section 4.7), and role-aware merging (detect each dataset's role, then merge
+  same-role datasets the way that role needs). Pure standard library; always importable.
 """
 from .detector import detect_format_and_role, VERSIONS
 
-__version__ = "1.1.0"
+__version__ = "1.3.6"
 __all__ = ["detect_format_and_role", "VERSIONS", "__version__"]

@@ -117,3 +117,23 @@ def test_scan_datasets_from_locked_gt_skips_unset_paths(tmp_path):
         w.writerow({"dataset_id": "ds2", "kaggle_path_hint": "NOT_YET_ATTACHED"})
     result = scan_datasets_from_locked_gt(gt)
     assert result["n_datasets"] == 1  # ds2 skipped
+
+
+def test_all_pairs_is_not_capped_even_when_review_sample_is(tmp_path):
+    # Regression test for a real bug (2026-10-17): with few pair-keys and many true candidates
+    # in one of them, review_sample silently drops some real candidates. all_pairs must not.
+    rng = np.random.default_rng(5)
+    ds1, ds2 = tmp_path / "ds1", tmp_path / "ds2"
+    ds1.mkdir(); ds2.mkdir()
+    # 20 near-identical cross-dataset pairs -- more than a small max_review_sample would keep
+    # for a single pair-key once divided by the number of pair-keys present.
+    for i in range(20):
+        base = rng.integers(0, 255, (32, 32, 3), dtype=np.uint8)
+        _save(ds1 / f"a{i}.png", base)
+        noisy = base.astype(np.int16).copy()
+        noisy[0, 0, 0] = (noisy[0, 0, 0] + 3) % 255
+        _save(ds2 / f"b{i}.png", noisy.astype(np.uint8))
+    result = scan_datasets({"ds1": ds1, "ds2": ds2}, hamming_threshold=10, max_review_sample=6)
+    assert len(result["review_sample"]) <= 6  # the human-facing sample is capped, as designed
+    assert len(result["all_pairs"]) >= 15  # but the real candidate list is not
+    assert result["n_candidate_pairs"] == len(result["all_pairs"])
